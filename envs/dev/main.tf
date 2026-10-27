@@ -57,10 +57,6 @@ module "route_table" {
 
 	routes = [
 		{
-			cidr_block = "10.0.0.0/16"
-    		gateway_id = "local"
-		},
-		{
 			cidr_block = "0.0.0.0/0"
       		gateway_id = module.vpc_1.internet_gateway_id
 		}
@@ -120,6 +116,8 @@ resource "aws_s3_bucket" "this_bucket" {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket_policy" "allow_access_from_only_endpoint" {
   bucket = aws_s3_bucket.this_bucket.id
   policy = <<POLICY
@@ -141,15 +139,15 @@ resource "aws_s3_bucket_policy" "allow_access_from_only_endpoint" {
             "aws:PrincipalArn": "${data.aws_caller_identity.current.arn}"
           }
         }
-      }
-    ]
-  }
+      ]
+    }
   POLICY
-
 }
 
 resource "aws_vpc_endpoint" "this_endpoint" {
   vpc_id       = module.vpc_1.vpc_id
-  service_name = "com.amazonaws.us-east-1.s3"
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [module.route_table.route_table_id]
 }
 
