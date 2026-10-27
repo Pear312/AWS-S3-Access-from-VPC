@@ -138,7 +138,7 @@ resource "aws_s3_bucket_policy" "allow_access_from_only_endpoint" {
         "Condition": {
           "StringNotEquals": {
             "aws:sourceVpce": "${aws_vpc_endpoint.this_endpoint.id}",
-            "aws:PrincipalArn": "arn:aws:iam::768898187522:user/ericmai"
+            "aws:PrincipalArn": "${data.aws_caller_identity.current.arn}"
           }
         }
       }
