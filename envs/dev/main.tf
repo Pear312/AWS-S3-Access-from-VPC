@@ -119,3 +119,37 @@ resource "aws_s3_bucket" "this_bucket" {
     Environment = "Dev"
   }
 }
+
+resource "aws_s3_bucket_policy" "allow_access_from_only_endpoint" {
+  bucket = aws_s3_bucket.this_bucket.id
+  policy = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "DenyAccessUnlessFromVpcEndpoint",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": [
+          "${aws_s3_bucket.this_bucket.arn}",
+          "${aws_s3_bucket.this_bucket.arn}/*"
+        ],
+        "Condition": {
+          "StringNotEquals": {
+            "aws:sourceVpce": "${aws_vpc_endpoint.this_endpoint.id}",
+            "aws:PrincipalArn": "arn:aws:iam::768898187522:user/ericmai"
+          }
+        }
+      }
+    ]
+  }
+  POLICY
+
+}
+
+resource "aws_vpc_endpoint" "this_endpoint" {
+  vpc_id       = module.vpc_1.vpc_id
+  service_name = "com.amazonaws.us-east-1.s3"
+}
+
